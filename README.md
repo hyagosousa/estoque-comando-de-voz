@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Estoque por Voz - Robusto</title>
+<title>Controle de Estoque por Voz - Qualquer Material</title>
 <style>
 body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
 .container { max-width: 900px; margin: auto; padding: 20px; background: #fff; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
@@ -21,7 +21,7 @@ th { background: #eee; }
 <body>
 
 <div class="container">
-<h2>Controle de Estoque por Voz - Robusto</h2>
+<h2>Controle de Estoque por Voz - Qualquer Material</h2>
 <button id="btnStart">🎤 Falar</button>
 <button id="btnConfirm" style="display:none;">✅ Confirmar lançamento</button>
 <p id="status">Clique em "Falar" e diga algo como: "3 parafusos 4 mm para van do Eduardo"</p>
@@ -84,7 +84,8 @@ function atualizarTabelas(){
 // Interpreta o comando de voz e guarda temporariamente
 function interpretarComando(texto){
     texto = texto.toLowerCase();
-    let regex = /(\d+)\s+([\w\s\d]+?)\s+para\s+(.+)/i;
+    // Regex genérica para qualquer material com detalhes
+    let regex = /(\d+)\s+(.+)\s+para\s+(.+)/i;
     let match = texto.match(regex);
     if(match){
         ultimoComando = {
@@ -154,4 +155,5 @@ btnConfirm.onclick = () => {
 
 </body>
 </html>
+
 
