@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Estoque por Voz com Confirmação</title>
+<title>Controle de Estoque por Voz - Robusto</title>
 <style>
 body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-.container { max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-h2 { text-align: center; }
+.container { max-width: 900px; margin: auto; padding: 20px; background: #fff; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+h2 { text-align: center; margin-bottom: 10px;}
 button { padding: 12px 20px; margin-top: 10px; font-size: 16px; border: none; border-radius: 6px; background: #007bff; color: white; cursor: pointer;}
 button:hover { background: #005fcc; }
 #btnConfirm { background: #28a745; margin-left: 10px;}
@@ -15,15 +15,16 @@ button:hover { background: #005fcc; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px;}
 th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
 th { background: #eee; }
+#status { margin-top: 10px; font-weight: bold; }
 </style>
 </head>
 <body>
 
 <div class="container">
-<h2>Controle de Estoque por Voz com Confirmação</h2>
+<h2>Controle de Estoque por Voz - Robusto</h2>
 <button id="btnStart">🎤 Falar</button>
-<p id="status">Clique em "Falar" e diga algo como: "3 parafusos 4 mm para van do Eduardo"</p>
 <button id="btnConfirm" style="display:none;">✅ Confirmar lançamento</button>
+<p id="status">Clique em "Falar" e diga algo como: "3 parafusos 4 mm para van do Eduardo"</p>
 
 <h3>Estoque Atual</h3>
 <table id="tabelaEstoque">
@@ -80,6 +81,7 @@ function atualizarTabelas(){
     });
 }
 
+// Interpreta o comando de voz e guarda temporariamente
 function interpretarComando(texto){
     texto = texto.toLowerCase();
     let regex = /(\d+)\s+([\w\s\d]+?)\s+para\s+(.+)/i;
@@ -89,18 +91,21 @@ function interpretarComando(texto){
             quantidade: parseInt(match[1]),
             produto: match[2].trim(),
             carro: match[3].trim(),
-            tipo: "Saída" // padrão Saída
+            tipo: "Saída" // padrão Saída, pode alterar se quiser Entrada
         };
         status.innerText = `Você disse: "${texto}". Clique em CONFIRMAR se estiver correto.`;
         btnConfirm.style.display = "inline-block";
     } else {
-        alert("Não entendi o comando. Fale: quantidade + produto + para + carro");
+        ultimoComando = null;
+        status.innerText = "Não consegui interpretar. Fale: quantidade + produto + para + carro";
+        btnConfirm.style.display = "none";
     }
 }
 
+// Função principal para iniciar reconhecimento de voz
 document.getElementById("btnStart").onclick = () => {
     if(!('webkitSpeechRecognition' in window)){
-        alert("Seu navegador não suporta reconhecimento de voz!");
+        alert("Seu navegador não suporta reconhecimento de voz! Use o Chrome ou Edge.");
         return;
     }
 
@@ -110,23 +115,30 @@ document.getElementById("btnStart").onclick = () => {
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => { status.innerText = "🎤 Ouvindo... fale agora!"; };
+
     recognition.onresult = (event) => {
         let texto = event.results[0][0].transcript;
         interpretarComando(texto);
     };
-    recognition.onerror = (event) => { alert("Erro: " + event.error); };
-    recognition.onend = () => { status.innerText += " | Clique novamente para novo comando."; };
+
+    recognition.onerror = (event) => {
+        status.innerText = "❌ Erro no reconhecimento: " + event.error;
+        btnConfirm.style.display = "none";
+    };
+
+    recognition.onend = () => {
+        if(!ultimoComando) status.innerText += " | Clique em 'Falar' para tentar novamente.";
+    };
+
     recognition.start();
 };
 
 // Botão de confirmação
 btnConfirm.onclick = () => {
     if(ultimoComando){
-        // Atualiza estoque
         if(!estoque[ultimoComando.produto]) estoque[ultimoComando.produto] = 0;
         estoque[ultimoComando.produto] += ultimoComando.quantidade;
 
-        // Atualiza histórico
         historico.push({
             ...ultimoComando,
             data: new Date().toLocaleString()
@@ -142,5 +154,4 @@ btnConfirm.onclick = () => {
 
 </body>
 </html>
-
 
